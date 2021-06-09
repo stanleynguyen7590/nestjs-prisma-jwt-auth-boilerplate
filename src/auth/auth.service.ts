@@ -22,11 +22,8 @@ export class AuthService {
     return null;
   }
 
-  async createUser(
-    username: string,
-    password: string,
-  ): Promise<User | null> | null {
-    const oldUser = this.usersService.findUser({ username });
+  async createUser(username: string, password: string): Promise<User | null> {
+    const oldUser = await this.usersService.findUser({ username });
     if (oldUser) return null;
     const hashedPassword = await argon2.hash(password);
     const user = await this.usersService.createUser({

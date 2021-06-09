@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Post,
   Request,
   UseGuards,
@@ -18,23 +20,30 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req): Promise<{ access_token: string }> {
+  async login(@Request() req: any): Promise<{ access_token: string }> {
     return this.authService.login(req.user);
   }
 
   @Post('register')
-  async register(@Body() { username, password }: RegisterUserBody) {
+  async register(
+    @Body() { username, password }: RegisterUserBody,
+  ): Promise<RegisterUserResponse> {
     const user = await this.authService.createUser(username, password);
+    if (!user)
+      throw new HttpException('User already exists!', HttpStatus.BAD_REQUEST);
     const accessToken = await this.authService.createAccessToken(user);
     const registerUserResponse = new RegisterUserResponse();
-    registerUserResponse.user = user;
+    registerUserResponse.user = {
+      id: user.id,
+      username: user.username,
+    };
     registerUserResponse.accessToken = accessToken;
     return registerUserResponse;
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getCurrentUser(@Request() req) {
+  async getCurrentUser(@Request() req: any) {
     return req.user;
   }
 }

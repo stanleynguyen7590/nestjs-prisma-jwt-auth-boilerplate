@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
 
 export class RegisterUserResponse {
-  user: User;
+  user: Pick<User, 'id' | 'username'>;
   accessToken: string;
 }
