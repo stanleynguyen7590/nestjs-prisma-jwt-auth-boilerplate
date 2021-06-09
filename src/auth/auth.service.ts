@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -25,19 +25,20 @@ export class AuthService {
   async createUser(
     username: string,
     password: string,
-  ): Promise<User | HttpException> {
+  ): Promise<User | null> | null {
     const oldUser = this.usersService.findUser({ username });
-    if (oldUser)
-      return new HttpException(
-        'The username is already in use',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (oldUser) return null;
     const hashedPassword = await argon2.hash(password);
     const user = await this.usersService.createUser({
       username,
       password: hashedPassword,
     });
     return user;
+  }
+
+  async createAccessToken(user: User) {
+    const payload = { username: user.username, sub: user.id };
+    return await this.jwtService.signAsync(payload);
   }
 
   async login(user: User): Promise<{ access_token: string }> {
