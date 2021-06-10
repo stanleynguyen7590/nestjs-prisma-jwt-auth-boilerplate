@@ -1,3 +1,8 @@
 export const jwtConstants = {
-  secret: 'secretKey',
+  accessTokenSecret: 'secretKey',
+  refreshTokenSecret: 'anotherSecretKey',
+};
+
+export const cookiesKey = {
+  refreshToken: 'jid',
 };
