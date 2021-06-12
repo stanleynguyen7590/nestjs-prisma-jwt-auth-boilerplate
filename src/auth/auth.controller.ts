@@ -9,7 +9,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { cookiesKey } from './constants';
 import { LoginUserResponse } from './dto/login-user.response';
@@ -43,7 +43,8 @@ export class AuthController {
     loginUserResponse.refreshToken = refreshToken;
     res.cookie(cookiesKey.refreshToken, refreshToken, {
       httpOnly: true,
-      path: '/refresh',
+      sameSite: 'strict',
+      path: '/auth/refresh',
     });
     return loginUserResponse;
   }
@@ -68,7 +69,8 @@ export class AuthController {
     };
     res.cookie(cookiesKey.refreshToken, refreshToken, {
       httpOnly: true,
-      path: '/refresh',
+      sameSite: 'strict',
+      path: '/auth/refresh',
     });
     registerUserResponse.accessToken = accessToken;
     registerUserResponse.refreshToken = refreshToken;
@@ -77,8 +79,11 @@ export class AuthController {
 
   @Post('refresh')
   async refresh(
-    @Body() { refreshToken }: { refreshToken: string },
+    // @Body() { refreshToken }: { refreshToken: string },
+    @Req() req: Request,
   ): Promise<RefreshTokenResponse> {
+    const refreshToken = req.cookies['jid'];
+    // console.log(refreshToken);
     const { user, token } =
       await this.authService.createAccessTokenFromRefreshToken(refreshToken);
 
@@ -87,7 +92,14 @@ export class AuthController {
     refreshTokenResponse.accessToken = token;
     return refreshTokenResponse;
   }
-
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.cookie(cookiesKey.refreshToken, '', {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+    });
+  }
   @UseGuards(JwtAuthGuard)
   @Get('secret')
   async getSecret() {

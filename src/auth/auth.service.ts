@@ -72,7 +72,6 @@ export class AuthService {
           id: parseInt(payload.sub),
         },
       });
-      console.log(user);
       if (!user) {
         throw new UnprocessableEntityException('Refresh token malformed');
       }
